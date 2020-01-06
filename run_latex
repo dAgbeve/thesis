@@ -1,5 +1,11 @@
 #!/bin/sh
+rm -v $1.pdf
+sleep 0.5
 pdflatex $1.tex
 bibtex $1
 pdflatex $1.tex
 pdflatex $1.tex
+sleep 0.5
+rm -vr *.bbl *.aux *.blg *.lof *.toc *.out *.lot *.log
+sleep 0.5
+zathura $1.pdf

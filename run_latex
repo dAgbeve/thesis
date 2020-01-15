@@ -8,4 +8,4 @@ pdflatex $1.tex
 sleep 0.5
 rm -vr *.bbl *.aux *.blg *.lof *.toc *.out *.lot *.log #*.fdb_latexmk *.fls
 sleep 0.5
-zathura $1.pdf
+zathura $1.pdf &

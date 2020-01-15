@@ -45,7 +45,20 @@ APT-MAC protocol is a zero configuration - manual configuration not needed - mac
 Reinforcement learning is utilized to learn the required rate of transmission of each active node and continually update the transmission requirements of nodes.
 An overview of the reinforcement learning algorithm is given, followed by how it is used the APT-MAC protocol.
 \subsubsection{Multi-Arm Bandit}
-    
+When one is made to choose between multiple actions with an unknown reward for each action taken and the goal being to maximize the profit margin through a series of actions, the problem is classified as the multi-arm bandit problem.
+For example, a website deciding on which adverts to show to its visitors.
+The proprietor must maximize advertisement revenue but does not have enough information about the visitor to pursue a specific strategy, however, there are a large pool of adverts to choose from.
+This begs the question of which adverts will drive the maximum revenue.
+The websites, hence, needs to make a series of decisions, each with unknown results and rewards.\\\\
+When a set of action(s) is found to maximize reward and those are actions are selected over and over again it is termed \textit{Exploitation}, thus the knowledge of the actions is being exploited whereas when an action is selected for which the reward is not known is \textit{Exploration}. An optimum balance between the exploitation and exploration is needed in most cases to achieve maximum reward.\\\\
+From a more scientific standpoint, Bernoulli multi-armed bandit can be described as an \textit{action reward-function} tuple $\langle A,R \rangle$.
+At each time step \textit{t} an action $A=a$ is taken and a reward $R=r$ is received with reward probability $\{\theta_1 ... \theta_K\}$.
+The expected reward which is the value of the action taken is given by $Q(a_t) = \mathbb{E}[\,R | A=a]\,= \theta$.
+The goal is to maximize $\sum\nolimits_{t=1}^T r_t$, the cummulutative reward, hence an optimal action $a^*$ with and optimal probability $\theta^*$ thus:
+\begin{equation}
+    \theta^* = Q(a^*) = \mathop{\textbf{max}}_{a{\in}A}Q(a)
+\end{equation}
+Broadly, the various algorithmic solutions to multi-arm bandit problem can be categorized as; no exploration - greedy, random exploration and exploration intelligently with reference to probability \cite{Sutton&Barto}.
 \subsubsection{APT-MAC protocol overview}
 The "battery-freeness" of the protocol is as a result of the use of sensor-augmented RFID tags.
 
@@ -58,4 +71,4 @@ Expected reward is calculated with the formula \ref{expected_reward} with the ex
     \label{expected_reward}
 \end{equation}
 $n$ is the time slot of the query, $a_i$ is the action of querying tag $i$ and $\alpha$ is the learning rate.\newline
-A more detailed explanation of the protocol, such as the learning rate parameter and theevaluation of the $Reward$ can be found in \cite{Maselli}.
+A more detailed explanation of the protocol, such as the learning rate parameter and the evaluation of the $Reward$ can be found in \cite{Maselli}.

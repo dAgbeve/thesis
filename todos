@@ -1,0 +1,11 @@
+1) Take the udpserver udpclient application and merge is into one, then when
+a packet is received the next send time is calculated, which is based on the 
+paper, it is calculated from the total and with respect to the state machine
+diagram from the paper.
+
+2) The reader is the sender of the packets and the initiator. and it is also
+
+
+In handling the header, we create a class of the header and add some things to
+it, the the values of things we want and then use it.
+

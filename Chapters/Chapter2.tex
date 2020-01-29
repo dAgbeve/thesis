@@ -84,7 +84,7 @@ transmission or not.\\
 %\umlnote[x=2.5,y=-6, width=3cm]{B}{Je suis une note qui concerne la classe B}
 %\umlnote[x=7.5,y=-2]{import-2}{Je suis une note qui concerne la relation d'import}
 \end{tikzpicture}
-\caption{APT-MAC Header UML}
+\caption{Class Diagram - APT-MAC Header}
 \label{fig:headerUML}
 \end{figure}\\
 The UML class diagram is illustrated in Figure \ref{fig:headerUML}. The \emph{
@@ -93,7 +93,6 @@ Serialize} function puts the various fields of the header in series by writing t
 from host-order to network-order and the \emph{Deserialize} reads from network-order
 to host-order. \emph{Enum HeaderContents} holds the value of the various fields of
 the header.
-
 
 \subsection{Tag Augmented Sensor Devices}
 Devices in a smart home are broadly classified under three categories: periodic
@@ -131,3 +130,46 @@ Figures \ref{fig:temperature-sensor} to \ref{fig:joysick-sensor}, taken from
 could be in. The state change is based on time. Taking fig \ref{fig:temperature-sensor}
 for instance, it was found that a temperature sensor produces new data three times in
 an hour hence the various probabilities with respect to time in milliseconds.\\\\
+\begin{centering}
+\begin{figure}[h!]
+    \begin{tikzpicture}
+        \umlemptyclass[x=-3.5,y=0]{Application}{
+        }{}
+        \umlclass[x=4.0,y=-3]{SensorNode}{
+            -m\_port : uint16\_t \\ -m\_PreState : uint16\_t \\ m\_received :
+            uint64\_t \\ -m\_socket : Ptr\tiny{$\langle$} \small{Socket} \tiny{
+            $\rangle$} \\ -m\_lossCounter : PacketLossCounter
+        }{
+        +SensorNode() \\
+        \umlvirt{$\sim$SensorNode} \\
+        \umlvirt{-StartApplication(void) : void} \\
+        \umlvirt{-StopApplication(void) : void} \\
+        \umlvirt{\#DoDispose(void) : void} \\
+        -HandleRead(socket : Ptr{\tiny$\langle$}Socket{\tiny$\rangle$})
+        : void \\ -indexOfLargestProb({\tiny\&}matrix : Matrix) : int \\
+        -CopyMatrix({\tiny\&}from : Matrix, {\tiny\&}to : Matrix) : void \\
+        -MultMatrix({\tiny\&}trsMtx : const Matrix, {\tiny\&}trsMtxb
+        : const Matrix) : Matrix \\
+        \umlstatic{+GetTypeId(void) : TypeId} \\ +GetLost(void) : const uint32\_t \\
+        +GetReceived(void) : uint64\_t
+    }
+    \umltypedef[x=-1.5,y=-9]{Matrix}{}{}
+    \umlemptyclass[x=-4.5,y=-5,template={T,U}]{std::vector}{}{
+    }
+    \umlclass[x=5.5,y=-10]{SensorNodeHelper}{
+        -m\_factory : ObjectFactory \\
+        -m\_server : Ptr{\tiny$\langle$}TmpSense{\tiny$\rangle$}
+    }
+    {
+        +SensorNodeHelper() \\ +SensorNodeHelper(port : uint16\_t) \\
+        +SetAttribute(name : std::string , {\tiny\&}value : const AttributeValue) \\
+        +Install(c : NodeContainer) : ApplicationContainer \\
+        +GetServer(void) : Ptr{\tiny$\langle$}TmpSense{\tiny$\rangle$}
+    }
+    \umldep[geometry=-|]{Matrix}{std::vector}
+    \umldep[geometry=-|]{SensorNode}{Matrix}
+    \umlinherit[geometry=-|]{SensorNode}{Application}
+    \end{tikzpicture}
+    \caption{Class Diagram - Sensor Nodes}
+\end{figure}
+\end{centering}

@@ -25,6 +25,7 @@
 \LoadClass{\baseclass}
 \newcommand\bhrule{\typeout{------------------------------------------------------------------------------}}
 
+%\renewcommand{\familydefault}{\sfdefault}
 \newcommand\Declaration[1]{
 \btypeout{Declaration of Authorship}
 \addtotoc{Declaration of Authorship}

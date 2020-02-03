@@ -34,7 +34,7 @@ undertake the research. At the time of setting up, this version was the latest m
 stable release.\\\\
 NS-3 is a voluminous software, the faster processor is needed, as a change to any
 file would mean rebuilding the file and its dependencies and those that depend on it.
-The version is also critical. Most versions are not backward compartible hence what
+The version is also critical. Most versions are not backward compatible hence what
 works on 3.29 might not work on 3.30 without a little tinkering.\\\\
 Gentoo Linux, even though time consuming and quite advance in installation and
 setting up, turns to be one of the fastest linux operating systems available. This is
@@ -244,7 +244,20 @@ of course, the constructors and a function that return a pointer to the associat
 server.
 
 \subsection{Querier}
-
+An RFID reader or interrogator, and in this case, a querier is a bridge between an RFID
+tag and a controller which, among other things could, read and write data to the tag,
+power the tag and relay data to and from the controller\cite{HuntPuglia&Puglia}.\\
+Controllers are mainly the part of the system that does the processing of the data on
+the tags.\\\\
+Querying of tags is done in a slotted time. In each time slot, a request-for-data
+packet is sent to the tags with a response of positive or negative data. With TDMA,
+discussed earlier, slot assignment is static, not responsive to the demand of the
+volume of data available on tag-augmented sensors hence does not scale in this case.
+A more scalable and responsive algorithm is proposed in \cite{Maselli}, where for each
+time slot a query is made and based on the outcome of the response to the query, more
+queries are made to the same tag or not. For a positive response, a reward parameter
+is increased and the highest reward value in the reward vector is queried next.
+Intuitively, a positive response implies query same tag again.\\
 \begin{centering}
     \begin{figure}[h!]
         \begin{tikzpicture}
@@ -300,5 +313,63 @@ server.
             \umlaggreg[geometry=-|]{Querier}{HeaderValidation}
 
         \end{tikzpicture}
+        \caption{Class Diagram - Querier}
+        \label{fig:Querier}
     \end{figure}
 \end{centering}
+\\
+The class diagram illustrating the \textit{Querier} class and its helper class are
+shown in \ref{fig:Querier}.\\
+A discussion of the various function of each class follows next.
+\begin{itemize}
+    \renewcommand{\labelitemi}{}
+\item \textbf{StartApplication:} the function to run in initializing the application.
+    Socket is created if there are no existing ones bound to the device and connected
+    to a peer address, which, in this case, is a broadcast address. Broadcast is
+    enabled on the socket, a packet-received-callback function is set up and 
+    finally the \textit{send} function is scheduled to immediately be invoked.
+\item \textbf{StopApplication:} called during the cancellation of the simulation.
+    Socket is closed and stripped down, the scheduled event is canceled.
+\item \textbf{Send:} the Querier broadcast to all the tags to get an inventory of
+    tags available. This function takes care of that. Packet is created, the broadcast
+    flag in the header is set and sent to the broadcast address.
+\item \textbf{HandleRead:} this is the packet-received-callback function, takes a
+    socket as parameter and invoked when there are packets to be read from the socket
+    file. The header of the packet is checked to determine the type of packet received.
+    If a \textit{broadcast\_reply} is received and it is not in the \textit{Querier}
+    inventory, it is added to the inventory. A packet with \textit{data-request} flag
+    is set and sent back to the tag from which the \textit{broadcast\_reply} is 
+    received.\\\\
+    For a \textit{data\_reply} packet type, the reward value of the sending tag is
+    retrieved and the \textit{state\_changed} flag is checked to determine if a new
+    data was sent or not. If a new data was sent, the reward vector is updated with a
+    \textit{m\_bonus} value and with a \textit{m\_malus} value if no new data is
+    received. \textit{SoftMax} is applied to the reward vector, the index with the
+    highest value is gotten which is the same index of the node vector, the 
+    \textit{data-request} flag is set and the packet sent to the node with the
+    maximum reward value. This cycle continues till the end of the simulation.
+\item \textbf{UpdateReward:} updates the reward vector. It takes as parameters the
+    reward vector, \textit{bonusORmalus} and the index of node whose reward needs
+    updating. A check is made to determine whether the updating is that of 
+    \textit{m\_bonus} or \textit{m\_malus} and the reward is updated based on
+    \ref{expected_reward}. The function returns the reward vector.
+\end{itemize}
+The constructor and destructor functions are included. There two versions of
+\textit{SetRemote}, one takes only \textit{Address} as parameter and the other
+\textit{Address} and \textit{port}, they perform the same function of setting up the
+remote address. \textit{GetTypeId} returns the \textit{TypeId} of the class.\\\\
+
+Helper class of \textit{Querier} has similar functions of the \textit{SensorNodeHelper}
+in \ref{fig:SensorNodes} and they perform virtually the same duties. As a result,
+a further discussion is omitted here.
+
+\subsection{Example}
+The simulation is set up here. A number of nodes is created depending on the number of
+tag-augmented sensors that is of interest. A net-device is installed on each node with
+a simple wireless channel/media also installed.\\\\
+Internet stack is added to the nodes and ipv4 is assigned to each network interfaces.
+One of the nodes is selected and on it is installed the \textit{Querier}, it becomes
+the reader. The other nodes are the tag-augmented sensors and on each is installed
+\textit{SensorNode} which is configured depending on whether it be an event based
+sensor, a real-time sensor or a periodic sensor. The start and stop time of the
+simulation is indicted and started.

@@ -9,3 +9,22 @@ diagram from the paper.
 In handling the header, we create a class of the header and add some things to
 it, the the values of things we want and then use it.
 
+=======>>>>>> Some errors
+looking at the diagram of the presence sensor the transition matrix of the short
+and long presence does not add up to 1, which a prerequisite for Markov chains
+hence i am changing it to the following. If the permanence of each state is
+(1 / (10*3600)) for short presence, and (1 / (60 * 3600)) for long presence
+then 1 minus each should be the transition to the no presence state and not
+vice versa.
+
+The TV remote is also a bit unclear as the Not-Pressing state is not adding to one
+per the diagram. And the description in the paper states that there would be an 8
+times pressing of the buttons before ending. Hence this should translate into an
+equal 4 times per each configuration, translating this in to a day usage should 
+mean that (4 * 8) / 24 * 3600  for each moving to config A and B, and an equal
+movement to either staying on Not pressing or to Not in use. They both get the 
+probability of (1 - ((4 * 8) / 24 * 3600)) / 2 .
+
+When the time of simulation is increased, it was found that the transition matrix
+was becoming infinitesimally small. Hence, there need to be a rethink of the
+transition probability.

@@ -288,7 +288,8 @@ on the usage findings from \cite{Maselli}.
     the \textit{Joystick} was simulated to have five states - \textit{Not Playing},
     \textit{Playing}, \textit{Configuration A}, \textit{Configuration B},\textit{
     Not Pressing}. There is equal probability of moving from \textit{Not Playing} state
-    to either \textit{Configuration} states and from \textit{Configuration A} or \textit{B}
+    to either \textit{Configuration} states and from \textit{Configuration A} or
+    \textit{B}
     the \textit{Joystick} moves into a \textit{Not Pressing} state, to a different
     \textit{Configuration} or stays in it's state, all with equal probability and vice
     versa from a \textit{Not Pressing} state.\\
@@ -308,6 +309,7 @@ When a \textit{data request} query is received, the content of the packet vector
 for emptiness, if empty, the \textit{STATE\_NOT\_CHANGED} flag is set and reply sent to
 the header. The \textit{STATE\_CHANGED} flag is set, added to each packet in the vector
 before sending all the packets in the vector, for when the vector is not empty.
+The memory tag size of each device is set to $256$\textit{bits} ($32$\textit{bytes}).
 \subsection{Querier}
 An RFID reader or interrogator, and in this case, a querier is a bridge between an RFID
 tag and a controller which, among other things could, read and write data to the tag,
@@ -428,10 +430,84 @@ Helper class of \textit{Querier} has similar functions of the \textit{SensorNode
 in \ref{fig:SensorNodes} and they perform virtually the same duties. As a result,
 a further discussion is omitted here.
 
+\subsection{TDMA Reader}
+This reader class is implemented in a TDMA fashion. Each query, which is slotted in a
+specific time interval, is done sequential and in an endless loop.
+\begin{centering}
+    \begin{figure}[h!]
+        \begin{tikzpicture}
+            \tikzumlset{font=\tiny\ttfamily}
+            \umlemptyclass[x=-4.0,y=1]{Application}
+            {}{}
+            \umlclass[x=3.0,y=-3.5]{TDMAQuerier}
+            {
+                -m\_AddressVector : std::vector$\langle${ns3::Address}$\rangle$ \\
+                -m\_peerPort : uint16\_t \\ -m\_peerAddress : ns3::Address \\
+                -m\_socket : ns3::Ptr$\langle${ns3::Socket}$\rangle$
+            }
+            {
+                +TDMAQuerier() \\ \umlvirt{$\sim$TDMAQuerier()} \\
+                \umlstatic{+GetTypeId(void) : ns3::TypeId} \\
+                +SetRemote(ip : ns3::Address , port : uint16\_t) \\
+                +SetRemote(ip : ns3::Address) : void \\
+                +ScheduleNextTx(socket : ns3::Ptr$\langle${ns3::Socket}$\rangle$)
+                : void \\
+                \umlvirt{\#DoDispose(void) : void} \\
+                \umlvirt{-StartApplication(void) : void} \\
+                \umlvirt{-StopApplication(void) : void} \\
+                -SendQuery(socket : ns3::Ptr$\langle${ns3::Socket}$\rangle$
+                , form : ns3::Address , packet :
+                ns3::Ptr$\langle${ns3::Packet}$\rangle$) \\
+                -HandleReceive(socket : ns3::Ptr$\langle${ns3::Socket}$\rangle$)\\
+                -Send(void) : void
+
+
+            }
+            \umlclass[x=1,y=-9.0]{QuerierHelper}
+            {
+                -m\_factory : ObjectFactory
+            }
+            {
+                +TDMAQuerierHelper() \\
+                +IDMAQuerierHelper(ip : Address) \\
+                +TDMAQuerierHelper(ip : Address , port : uint16\_t) \\
+                +SetAttribute(name : std::string, ${\&}$value : AttributeValue
+                const) \\
+                +Install(c : NodeContainer) : ApplicationContainer
+
+            }
+            \umlinherit[geometry=-|]{TDMAQuerier}{Application}
+
+        \end{tikzpicture}
+    \end{figure}
+\end{centering}\\
+\textit{StartApplication} function is called at the initiation state of the
+\textit{TDMAQuerier} class. It sets up an IPv4 UDP socket, connects to the broadcast,
+configures the \textit{SetRecvCallback} function of the \textit{socket} class to
+\textit{HandleReceive} which reads packet in the socket file, the \textit{Send}
+function queries for device identification is called next and the finally the 
+\textit{ScheduleNextTx} is scheduled to be called a minute after initiation, at which
+point all devices should be identified.\\\\
+The packet type is checked in the \textit{HandleReceive} function, when it is a reply
+to broadcast identification and the device is not already in \textit{m\_AddressVector},
+it is added. \textit{ScheduleNextTx} function takes socket pointer as an argument,
+creates a one-byte packet and schedules \textit{SendQuery} for each device address
+in the \textit{m\_AddressVector} vector to be called at $10$\textit{milliseconds}
+apart, it starts again when it gets to the final address in the vector.
+$10$\textit{milliseconds} was found to be the least inter-slot time capable of
+allowing for the devices to be able to log the parameters of interest. The 
+\textit{SendQuery} function takes socket pointer, address and packet pointer as
+arguments, it adds \textit{DATA\_REQUEST} flag to the header of the packet and sends
+it off to the designated address.\\\\
+The \textit{Install} function of the \textit{QuerierHelper} class 'installs' the
+application on the node. \textit{SetAttribute} sets the various attributes on the
+\textit{m\_factory}.
+
 \subsection{Example}
 The simulation is set up here. A number of nodes is created depending on the number of
 tag-augmented sensors that is of interest. A net-device is installed on each node with
-a simple wireless channel/media also installed.\\\\
+a simple wireless channel/media also installed of $640$\textit{kbps} data rate.
+The data rate of the net-device is set at $640$\textit{kbps} \cite{epcglobal}.\\\\
 Internet stack is added to the nodes and ipv4 is assigned to each network interfaces.
 One of the nodes is selected and on it is installed the \textit{Querier}, it becomes
 the reader. The other nodes are the tag-augmented sensors and on each is installed

@@ -1,0 +1,33 @@
+\chapter{Conclusion}
+Simulating a novel medium access control (MAC) protocol, APT-MAC - an adaptive
+protocol to the data needs of the nodes accessing the medium, on the NS-3 platform
+was the goal of this experiment. The aim was extended to investigate how the
+performance of APT-MAC compare to that of TDMA.\\\\
+The algorithm of the data-requirement-adaptive protocol is based on a solution to
+the Multi-arm Bandit problem, more precisely $\varepsilon$-greedy algorithm, hence
+the opening of this documentation sought to shed light on the Multi-arm Bandit
+problem with its $\varepsilon$-greedy algorithm solution. A brief explanation of
+TDMA was also introduced.
+Next, was a description of the actual simulation, the various classes and the
+task of the various functions used in the simulation. Three categories of 
+tag-augmented data-packet producing sensory nodes were replicated, namely -
+periodic, event-based and real-time. Both readers, that implementing TDMA and
+APT-MAC respectively. The focus was turn on measuring the performance of both
+TDMA and APT-MAC and an elucidation on how the variables of interest - data loss
+and packet delay - were harnessed.\\\\
+The results clearly showed that the performance outcome, that is, the percentage of
+new data that is lost by the sensory devices and the speed, in terms of time, with
+which a newly generated packet is delivered to reader due to the readers inability
+or ability to query the tags on time is much better with APT-MAC.
+In the worse case scenario, data loss and packet delay of APT-MAC were less than
+$1\%$ and $0.9$\textit{s} respectively, and that of TDMA stood at $7.05\%$ for
+data loss and almost $2$\textit{s} with TDMA.
+\section{Future Work}
+A follow up on this investigation could focus on the effects of mobility of the
+tag-augmented sensory devices on the performance of the protocol. There are other
+solutions to the Multi-Arm bandit problem, chief among them is the Upper Confidence
+Bounds \cite{Sutton&Barto}. An investigation into which other algorithm could
+perform better than $\varepsilon$-greedy algorithm is the focus of a future work
+on this.
+
+

@@ -61,12 +61,14 @@ transmission or not.\\
     \umlemptyclass[x=0,y=0]{Header}{
 }{}
 \umlclass[x=5.5,y=-2]{AptMacHeader}{
-  -m\_id : uint16\_t \\ -m\_type : uint16\_t \\ -m\_stateChange : uint16\_t
+  -m\_id : uint16\_t \\ -m\_type : uint16\_t \\ -m\_stateChange : uint16\_t \\
+  -m\_dataLoss : uint16\_t
 }{
   +AptMacHeader() \\ +SetId(id : uint16\_t) : void \\ +GetId (void) : const
   uint16\_t\\ +SetPacketType(ptype : uint16\_t) : void \\ +GetPacketType(void) :
   const uint16\_t \\ +SetStateChange(stateChange : uint16\_t) : void \\ 
   +GetStateChange(void) : const uint16\_t \\ \umlstatic{+GetTypeId(void) : TypeId}\\
+  +GetDataLoss(void) : const uint16\_t \\ +SetDataLoss(d : uint16\_t) : void \\
   \umlvirt{+Serialize(start : Buffer::Iterator) : const void} \\
   \umlvirt{+Deserialize(start : Buffer::Iterator) : uint32\_t} \\
   \umlvirt{+GetSerializedSize(void) : const uint32\_t} \\
@@ -143,27 +145,44 @@ $1-3/(3600*1000)$ stays in its state.\\\\
         \umlemptyclass[x=-3.5,y=0]{Application}{
         }{}
         \umlclass[x=2.5,y=-2]{SensorNode}{
-            -m\_port : uint16\_t \\ -m\_PreState : uint16\_t \\ m\_received :
-            uint64\_t \\ -m\_socket : Ptr$\langle$Socket$\rangle$ \\
-            -m\_lossCounter : PacketLossCounter
+            -m\_port : uint16\_t \\ -m\_PreState : uint16\_t \\
+            -m\_socket : Ptr$\langle$Socket$\rangle$ \\
+            -packetGenerationTime : uint64\_t \\ -m\_PreState : uint64\_t \\
+            -m\_newDataCountSent : uint64\_t \\ -m\_newDataCountProduced : uint64\_t
+            \\ -m\_queryCounter : uint64\_t \\ -dataLossLog : std::string \\
+            -dataFile : std::string \\
+            -m\_tagDataVector : std::vector$\langle$Ptr$\langle$NS3::Packet$\rangle$$\rangle$
+            \\ -m\_delayVector : std::vector$\langle$uint16\_t$\rangle$ \\
+            -m\_dllVector : std::vector$\langle$uint16\_t$\rangle$
         }{
         +SensorNode() \\
         \umlvirt{$\sim$SensorNode} \\
         \umlvirt{-StartApplication(void) : void} \\
         \umlvirt{-StopApplication(void) : void} \\
         \umlvirt{\#DoDispose(void) : void} \\
-        -HandleRead(socket : Ptr{\tiny$\langle$}Socket{\tiny$\rangle$})
+        -HandleBroadcast(socket : Ptr{\tiny$\langle$}Socket{\tiny$\rangle$}) :
+        void \\
+        -HandleDataQuery(socket : Ptr{\tiny$\langle$}Socket{\tiny$\rangle$})
         : void \\ -indexOfLargestProb({\tiny\&}matrix : Matrix) : int \\
-        -CopyMatrix({\tiny\&}from : Matrix, {\tiny\&}to : Matrix) : void \\
+        -GeneratePacket(void) : void \\
+        -SchedulePacketGenerate(void) : void \\
         -MultMatrix({\tiny\&}trsMtx : const Matrix, {\tiny\&}trsMtxb
-        : const Matrix) : Matrix \\
-        \umlstatic{+GetTypeId(void) : TypeId} \\ +GetLost(void) : const uint32\_t \\
-        +GetReceived(void) : uint64\_t
+        : const Matrix) : Matrix \\ -NextState(currentTime : NS3::Time) : Matrix \\
+        \umlstatic{+GetTypeId(void) : TypeId} \\ +Print({\tiny\&}a : const Matrix)\\
+
+        +Send(socket : Ptr{\tiny$\langle$}Socket{\tiny$\rangle$} , from : NS3::Address , Packet : Ptr{\tiny$\langle$}Packet{\tiny$\rangle$}) \\
+        +GetNewDataSent(void) : int64\_t \\ +SetNewDataSent(c : int64\_t) : void \\
+        +UpdateNewDataSent(void) : void \\ +SetNewDataProduced(c : int64\_t)\\
+        +GetNewDataProduced(void) : int64\_t \\ +UpdateNewDataProduced(void) : void
+        \\ +UpdateQueryCounter(void) : void \\ +ResetQueryCounter(void) : void
+        \\ +GetQueryCounter(void) : uint64\_t \\
+        +AppendDataFile(filename : std::string , data : uint16\_t ) \\
+        +CreateDatafile(device : std::string , devideID : uint32\_t)
     }
-    \umltypedef[x=-1.5,y=-6]{Matrix}{}{}
-    \umlemptyclass[x=-3.5,y=-3.5,template={T,U}]{std::vector}{}{
+    \umltypedef[x=-1.5,y=-9]{Matrix}{}{}
+    \umlemptyclass[x=-4,y=-3.5,template={T,U}]{std::vector}{}{
     }
-    \umlclass[x=4.0,y=-7.5]{SensorNodeHelper}{
+    \umlclass[x=4.0,y=-9.5]{SensorNodeHelper}{
         -m\_factory : ObjectFactory \\
         -m\_server : Ptr{\tiny$\langle$}SensorNode{\tiny$\rangle$}
     }
@@ -333,13 +352,14 @@ Intuitively, a positive response implies query same tag again.\\
             {}{}
             \umlclass[x=3.0,y=-3.5]{Querier}
             {
-                -m\_sendEvent : ns3::EventId \\ -m\_bonus : double \\
+                -m\_bonus : double \\ -rd : std::random\_device \\
                 -m\_malus : double \\ -m\_learningRate : double \\
                 -m\_nodeAddress : std::vector$\langle${ns3::Address}$\rangle$ \\
                 -m\_reward : std::vector$\langle${double}$\rangle$ \\
                 -m\_sReward : std::vector$\langle${double}$\rangle$ \\
                 -m\_peerPort : uint16\_t \\ -m\_peerAddress : ns3::Address \\
-                -m\_socket : Ptr$\langle${Socket}$\rangle$ \\ -m\_sent : uint32\_t
+                -m\_socket : Ptr$\langle${Socket}$\rangle$ \\ 
+                -randomEngine\{rd(\,)\,\} : std::mt19937\_64
             }
             {
                 +Querier() \\
@@ -351,11 +371,14 @@ Intuitively, a positive response implies query same tag again.\\
                 \umlvirt{-StartApplication(void) : void} \\
                 \umlvirt{-StopApplication(void) : void} \\
                 -Send(void) : void \\
-                -HandleRead(socket : Ptr$\langle${ns3::Socket}$\rangle$) : void \\
-                -UpdateReward(reward : std::vector$\langle${double}$\rangle$ ,
+                -HandleReceive(socket : Ptr$\langle${ns3::Socket}$\rangle$) : void
+                \\-UpdateReward(reward : std::vector$\langle${double}$\rangle$ ,
                 bonusORmalus : double , index : int) :
                 std::vector$\langle${double}$\rangle$ \\
-                -SoftMax(reward : std::vector$\langle${double}$\rangle$)
+                -SoftMax(reward : std::vector$\langle${double}$\rangle$) \\
+                -SendQuery(socket : Ptr$\langle${ns3::Socket}$\rangle$ ,
+                from : ns3::Address , packet : Ptr$\langle${ns3::Packet}$\rangle$)
+                \\ -LargestIndex(rw : std::vector$\langle$float$\rangle$)
             }
             \umlenum[x=10,y=-9.3]{HeaderValidation}
             {

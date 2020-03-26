@@ -1,0 +1,11 @@
+#!/bin/sh
+rm -v $1.pdf
+sleep 0.5
+pdflatex $1.tex
+bibtex $1
+pdflatex $1.tex
+pdflatex $1.tex
+sleep 0.5
+rm -vr *.bbl *.aux *.blg *.toc *.nav *.out *.log *.snm *.xml main-blx.bib
+sleep 0.5
+pdfpc $1.pdf &
